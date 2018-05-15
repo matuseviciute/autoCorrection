@@ -107,17 +107,6 @@ class RunFN():
                            save_model=None,  # checkpoint the best model
                            save_results=True,  # save the results as .json (in addition to mongoDB)
                            save_dir=DIR_OUT_TRIALS)
-        elif self.metric == "OutlierRecall":
-            fn = CompileFN(self.db_name, self.exp_name,
-                           data_fn=dat.data,
-                           model_fn=mod.model,
-                           add_eval_metrics={"outlier_recall": OutlierRecall(theta=25, threshold=1000)},
-                           loss_metric="outlier_recall",  # which metric to optimize for
-                           loss_metric_mode="max",  # try to maximize the metric
-                           valid_split=None,  # use 20% of the training data for the validation set
-                           save_model=None,  # checkpoint the best model
-                           save_results=True,  # save the results as .json (in addition to mongoDB)
-                           save_dir=DIR_OUT_TRIALS)
         elif self.metric == "CorrectedCorr":
             fn = CompileFN(self.db_name, self.exp_name,
                            data_fn=dat.data,

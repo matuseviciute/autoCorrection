@@ -67,7 +67,6 @@ setup(
         'scipy',
         'sklearn',
         'pandas',
-        'statsmodels',
 	    'pytest'
     ],
 )
