@@ -118,6 +118,17 @@ class RunFN():
                            save_model=None,  # checkpoint the best model
                            save_results=True,  # save the results as .json (in addition to mongoDB)
                            save_dir=DIR_OUT_TRIALS)
+        elif self.metric == "CorrectedCorr":
+            fn = CompileFN(self.db_name, self.exp_name,
+                           data_fn=dat.data,
+                           model_fn=mod.model,
+                           add_eval_metrics={"corrected_corr": CorrectedCorr()},
+                           loss_metric="corrected_corr",  # which metric to optimize for
+                           loss_metric_mode="min",  # try to minimize the metric
+                           valid_split=None,  # use 20% of the training data for the validation set
+                           save_model=None,  # checkpoint the best model
+                           save_results=True,  # save the results as .json (in addition to mongoDB)
+                           save_dir=DIR_OUT_TRIALS)
         else:
             raise ValueError("No such metric: " + str(self.metric) +
                              " Available metrics for --use_metric are: 'OutlierLoss'(default), 'OutlierRecall'.")

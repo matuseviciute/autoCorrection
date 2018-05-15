@@ -79,7 +79,7 @@ class AECorrector(Corrector):
                                   size=counts.shape[1], seed=self.seed,
                                   encoding_dim=self.encoding_dim)
             self.ae.model.compile(optimizer=Adam(lr=self.lr), loss=self.ae.loss)
-            self.ae.model.fit(self.data[0][0], self.data[0][1],
+            self.fitting = self.ae.model.fit(self.data[0][0], self.data[0][1],
                               epochs=self.epochs, batch_size=self.batch_size,
                               shuffle = False if self.seed is not None else True,
                               validation_data=(self.data[1][0], self.data[1][1]),

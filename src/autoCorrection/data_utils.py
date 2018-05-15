@@ -6,6 +6,66 @@ from copy import deepcopy
 import os
 DIR, filename = os.path.split(__file__)
 
+
+class Simulation():
+    def __init__(self, num_sample=1000, num_feat=2,
+                 num_genes=10000, dispersion_min=25,
+                 dispersion_max=25, adjusted_median=1000):
+        self.num_sample = num_sample
+        self.num_feat = num_feat
+        self.num_genes = num_genes
+        self.dispersion_min = dispersion_min
+        self.dispersion_max = dispersion_max
+        self.latent_var = self.get_latent_var()
+        self.log_means = self.get_log_means()
+        self.not_scaled_means = self.get_not_scaled_means()
+        self.dispersion = self.get_dispersion()
+        self.adjusted_median = adjusted_median
+        self.means = self.get_means()
+        self.counts = self.get_counts()
+
+    def get_random_nbinom(self, n=None):
+        # eps = 1e-10
+        # translate these into gamma parameters
+        gamma_shape = self.dispersion
+        gamma_scale = self.means / gamma_shape
+        gamma_samples = np.random.gamma(gamma_shape, gamma_scale, n)
+        return np.random.poisson(gamma_samples)
+
+    def get_latent_var(self):
+        self.latent_var = np.random.normal(0, 0.5, (self.num_sample, self.num_feat)).astype(np.float32)
+        return self.latent_var
+
+    def get_log_means(self):
+        np.random.seed(18)
+        z = self.latent_var
+        W = np.random.normal(0, 0.5, (self.num_feat, self.num_genes)).astype(np.float32)
+        b = np.random.normal(0, 0.5, (1, self.num_genes)).astype(np.float32)
+        self.log_means = np.dot(z, W) + b
+        return self.log_means
+
+    def get_not_scaled_means(self):
+        self.not_scaled_means = np.exp(self.log_means)
+        return self.not_scaled_means
+
+    def get_dispersion(self):
+        dispersion = np.random.uniform(self.dispersion_min,
+                                       self.dispersion_max, [1, self.num_genes])
+        self.dispersion = np.zeros_like(self.not_scaled_means) + dispersion
+        return self.dispersion
+
+    def get_means(self):
+        scale = np.multiply(self.adjusted_median, self.not_scaled_means)  # adjust median
+        mean_of_medians = np.mean(np.median(self.not_scaled_means, axis=0))
+        self.means = scale / mean_of_medians
+        return self.means
+
+    def get_counts(self):
+        self.counts = self.get_random_nbinom()
+        return self.counts.astype(int)
+
+
+
 class OutlierData():
     def __init__(self, index, data_with_outliers):
         self.index = index
@@ -137,8 +197,8 @@ class TrainTestPreparation():
             median_factor = self.get_median_factor(self.data, axis=0)
         elif self.rescale_per_sample:
             median_factor = self.get_median_factor(self.data, axis=1)
-            median_factor = median_factor.reshape(median_factor.shape[1], median_factor.shape[0])
-            median_factor = np.repeat(median_factor, self.data.shpe[1], axis=1)
+            median_factor = median_factor.reshape(median_factor.shape[0], 1)
+            median_factor = np.repeat(median_factor, self.data.shape[1], axis=1)
         elif self.rescale_by_global_median:
             median_factor = self.get_median_factor(self.data)
         scaling_factor = np.multiply(self.sf, median_factor+1)
@@ -256,7 +316,6 @@ class DataCooker():
         self.inj_method=inj_method
         count_data = self.get_count_data(self.counts,self.sf)
         pred_count_data = deepcopy(count_data)
-        pred_noisy = deepcopy(count_data)
         if self.inject_outliers_on_pred:
             if not np.array_equal(self.counts,self.pred_counts):
                 pred_count_data = self.get_count_data(self.pred_counts,self.pred_sf)
@@ -264,6 +323,8 @@ class DataCooker():
             x_test = {'inp': pred_noisy.outlier_data.data_with_outliers,
                       'sf': pred_count_data.processed_data.size_factor}
             y_true_idx_test = np.stack([self.pred_counts.astype(int), pred_noisy.outlier_data.index])
+            data = pred_noisy.outlier_data.data_with_outliers
+            count_data = self.get_count_data(data, self.sf)
         else:
             print("Preparing data!")
             x_test = {'inp': count_data.processed_data.data,
@@ -271,8 +332,6 @@ class DataCooker():
             y_true_idx_test = None
         if not self.only_prediction:
             if self.inject_outliers:
-                data = pred_noisy.outlier_data.data_with_outliers
-                count_data = self.get_count_data(data, self.sf)
                 count_noisy = self.prepare_noisy(count_data)
                 x_noisy_train = {'inp': count_noisy.outlier_data.data_with_outliers,
                                  'sf': count_data.processed_data.size_factor}
@@ -297,10 +356,15 @@ class Evaluation():
     def __init__(self, orig_data, correction):
         self.orig_data_rho = self.get_correlations(orig_data)
         self.corrected_data_rho = self.get_correlations(orig_data / correction)
+        self.mean_corrected_corr = self.get_mean_correlation(self.corrected_data_rho)
 
     def get_correlations(self, data):
         rho, p = sp.stats.spearmanr(data, axis=1)
         return rho
+
+    def get_mean_correlation(self, corr_matrix):
+        mean = np.absolute(corr_matrix[np.triu_indices_from(corr_matrix, 1)]).mean()
+        return mean
 
 
 

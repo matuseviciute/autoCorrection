@@ -54,3 +54,14 @@ class OutlierLoss():
         nb = NB(out_idx=idx)
         loss_res = K.eval(nb.loss(counts,pred_mean))
         return loss_res
+
+
+class CorrectedCorr():
+    def __init__(self):
+        pass
+
+    def __call__(self, y_true, pred_mean):
+        counts = y_true[0]
+        ev = Evaluation(counts, pred_mean)
+        metric = ev.mean_corrected_corr
+        return metric

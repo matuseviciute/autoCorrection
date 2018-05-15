@@ -1,4 +1,4 @@
-from keras.layers import Input, Dense, Lambda, Multiply
+from keras.layers import Input, Dense, Dropout, Lambda, Multiply
 from keras.models import Model
 from .losses import NB
 from .layers import ConstantDispersionLayer
@@ -40,7 +40,8 @@ class Autoencoder():
         self.sf_layer = Input(shape=(self.size,), name='sf')
         self.normalized = Multiply()([self.pseudoCount, self.sf_layer])
         self.logcounts = Lambda(self.Loglayer, output_shape=(self.size,), name="logCounts")(self.normalized)
-        encoded = Dense(self.encoding_dim, name='encoder', use_bias=True)(self.logcounts)
+        self.dropped = Dropout(0.3)(self.logcounts)
+        encoded = Dense(self.encoding_dim, name='encoder', use_bias=True)(self.dropped)
         decoded = Dense(self.size, name='decoder', use_bias=True)(encoded)
         mean_scaled = Lambda(self.ClippedExp, output_shape=(self.size,), name="mean_scaled")(decoded)
         inv_sf = Lambda(self.Invert, output_shape=(self.size,), name="inv")(self.sf_layer)
