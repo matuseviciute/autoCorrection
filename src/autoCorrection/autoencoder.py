@@ -40,7 +40,7 @@ class Autoencoder():
         self.sf_layer = Input(shape=(self.size,), name='sf')
         self.normalized = Multiply()([self.pseudoCount, self.sf_layer])
         self.logcounts = Lambda(self.Loglayer, output_shape=(self.size,), name="logCounts")(self.normalized)
-        self.dropped = Dropout(0.7)(self.logcounts)
+        self.dropped = Dropout(0.9)(self.logcounts)
         encoded = Dense(self.encoding_dim, name='encoder', use_bias=True)(self.dropped)
         decoded = Dense(self.size, name='decoder', use_bias=True)(encoded)
         mean_scaled = Lambda(self.ClippedExp, output_shape=(self.size,), name="mean_scaled")(decoded)
