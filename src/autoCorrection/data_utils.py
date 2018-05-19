@@ -312,27 +312,27 @@ class DataCooker():
             if self.optimization:
                 print("Prepare for optimization!")
                 data_in = self.prepare_noisy(proc_data)
+                data_noise_idx = data_in.outlier_data.index
+                data_in = self.get_count_data(data_in.outlier_data.data_with_outliers)
                 data_out = deepcopy(data_in)
-                data_out_noise_idx = data_out.outlier_data.index
-                data_out = self.get_count_data(data_out.outlier_data.data_with_outliers)
             else:
                 print("Prepare data!")
                 data_in = proc_data
                 data_out = deepcopy(data_in)
-                data_out_noise_idx = None
+                data_noise_idx = None
             if self.denoisingAE:
                 data_in = self.prepare_noisy(data_in)
 
             x_in = {'inp': data_in.processed_data.data,
-                    'sf': data_out.processed_data.size_factor}
+                    'sf': data_in.processed_data.size_factor}
             x_out = data_out.processed_data.data
 
             x_pred = {'inp': data_out.processed_data.data,
                       'sf': data_out.processed_data.size_factor}
-            if data_out_noise_idx is None:
+            if data_noise_idx is None:
                 y_true_and_idx = None
             else:
-                y_true_and_idx = np.stack([self.counts.astype(int), data_out_noise_idx])
+                y_true_and_idx = np.stack([self.counts.astype(int), data_noise_idx])
 
             cooked_data = (x_in, x_out),(x_in, x_out), (x_pred, y_true_and_idx)
         else:
