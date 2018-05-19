@@ -12,7 +12,12 @@ class OutlierLoss():
         idx = y_true[1].flatten()
         pred_mean = pred_mean.flatten()
         nb = NB(out_idx=idx)
-        loss_res = K.eval(nb.loss(counts,pred_mean))
+        nb.theta = tf.Variable([np.float32(25.0)], dtype=tf.float32, name='theta')
+        sess = tf.Session()
+        K.set_session(sess)
+        sess.run(tf.global_variables_initializer())
+        with sess.as_default():
+            loss_res=nb.loss(counts,pred_mean+1e-10).eval()
         return loss_res
 
 
