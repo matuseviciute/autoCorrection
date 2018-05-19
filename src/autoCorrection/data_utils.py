@@ -329,7 +329,10 @@ class DataCooker():
 
             x_pred = {'inp': data_out.processed_data.data,
                       'sf': data_out.processed_data.size_factor}
-            y_true_and_idx = np.stack([self.counts.astype(int), data_out_noise_idx])
+            if data_out_noise_idx is None:
+                y_true_and_idx = None
+            else:
+                y_true_and_idx = np.stack([self.counts.astype(int), data_out_noise_idx])
 
             cooked_data = (x_in, x_out),(x_in, x_out), (x_pred, y_true_and_idx)
         else:
