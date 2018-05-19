@@ -8,11 +8,10 @@ class TestEndToEnd(unittest.TestCase):
     def test_end_to_end(self):
         counts = np.random.negative_binomial(n=20, p=0.2, size=(10, 8))
         sf = np.ones((10, 8))
-        corrector = autoCorrection.correctors.AECorrector(encoding_dim=5)
+        corrector = autoCorrection.correctors.AECorrector()
         correction = corrector.correct(counts=counts, size_factors=sf)
-        #self.assertEqual(counts.shape, correction.shape)
-        ev = autoCorrection.data_utils.Evaluation(counts, correction)
-        self.assertTrue(ev.mean_corrected_corr < 0.2)
+        self.assertEqual(counts.shape, correction.shape)
+
 
 class TestSavingAndLoading(unittest.TestCase):
 
@@ -31,14 +30,6 @@ class TestSavingAndLoading(unittest.TestCase):
         correction = corrector.correct(counts, sf)
         self.assertEqual(counts.shape, correction.shape)
 
-class TestIfNoSf(unittest.TestCase):
-
-    def test_no_sf(self):
-        counts = np.random.negative_binomial(n=20, p=0.2, size=(10, 8))
-        corrector = autoCorrection.correctors.AECorrector()
-        correction = corrector.correct(counts=counts)
-        ev = autoCorrection.data_utils.Evaluation(counts, correction)
-        self.assertTrue(ev.mean_corrected_corr < 0.5)
         
 class TestSetSeed(unittest.TestCase):
     
