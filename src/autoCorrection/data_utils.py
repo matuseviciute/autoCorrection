@@ -314,7 +314,7 @@ class DataCooker():
                 data_in = self.prepare_noisy(proc_data)
                 data_out = deepcopy(data_in)
                 data_out_noise_idx = data_out.outlier_data.index
-                data_out = self.get_count_data(data_out)
+                data_out = self.get_count_data(data_out.outlier_data.data_with_outliers)
             else:
                 print("Prepare data!")
                 data_in = proc_data
@@ -324,7 +324,7 @@ class DataCooker():
                 data_in = self.prepare_noisy(data_in)
 
             x_in = {'inp': data_in.processed_data.data,
-                    'sf': data_in.processed_data.size_factor}
+                    'sf': data_out.processed_data.size_factor}
             x_out = data_out.processed_data.data
 
             x_pred = {'inp': data_out.processed_data.data,
