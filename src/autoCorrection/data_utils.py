@@ -319,6 +319,7 @@ class DataCooker():
                 print("Prepare data!")
                 data_in = proc_data
                 data_out = deepcopy(data_in)
+                data_out_noise_idx = None
             if self.denoisingAE:
                 data_in = self.prepare_noisy(data_in)
 
