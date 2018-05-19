@@ -60,7 +60,8 @@ class AECorrector(Corrector):
     def correct(self, counts, size_factors=None, only_predict=False):
         if len(counts.shape) == 1:
             counts = counts.reshape(1,counts.shape[0])
-            size_factors = size_factors.reshape(1,size_factors.shape[0])
+            if size_factors is not None:
+                size_factors = size_factors.reshape(1,size_factors.shape[0])
         if size_factors is not None and counts.shape[0] != size_factors.shape[0]:
             raise ValueError("Size factors and counts must have equal number of samples"+
                              "\nNow counts shape:"+str(counts.shape)+ \

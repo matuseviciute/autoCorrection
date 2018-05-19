@@ -181,6 +181,8 @@ class TrainTestPreparation():
         elif axis==1:
             median_factor = np.median(data, axis)
             median_factor[median_factor == 0] = 1
+        else:
+            median_factor = 1
         return median_factor
 
     def get_size_factor(self):
@@ -280,10 +282,7 @@ class DataCooker():
         self.only_prediction = only_prediction
         self.inj_method = inj_method
         self.seed = seed
-        if size_factors is not None:
-            self.sf = size_factors
-        else:
-            self.sf = np.ones_like(counts).astype(float)
+        self.sf = size_factors
 
 
     def inject(self, data):

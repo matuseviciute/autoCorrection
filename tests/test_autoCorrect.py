@@ -30,6 +30,14 @@ class TestSavingAndLoading(unittest.TestCase):
         correction = corrector.correct(counts, sf)
         self.assertEqual(counts.shape, correction.shape)
 
+class TestIfNoSf(unittest.TestCase):
+
+    def test_no_sf(self):
+        counts = np.random.negative_binomial(n=20, p=0.2, size=(10, 8))
+        corrector = autoCorrection.correctors.AECorrector()
+        correction = corrector.correct(counts=counts)
+        ev = autoCorrection.data_utils.Evaluation(counts, correction)
+        self.assertTrue(ev.mean_corrected_corr < 0.2)
         
 class TestSetSeed(unittest.TestCase):
     
