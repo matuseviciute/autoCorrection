@@ -71,7 +71,7 @@ class AECorrector(Corrector):
             raise ValueError("There is no model "+str(model_file)+" or no weigthts "+str(weights_file)+
                   "' saved. Only predict is not possible!")
         self.loader = DataCooker(counts, size_factors,
-                                 inject_outliers=self.denoisingAE, inject_on_pred=False,
+                                 denoisingAE=self.denoisingAE,
                                  only_prediction=only_predict, seed=self.seed)
         self.data = self.loader.data()
         if not only_predict:

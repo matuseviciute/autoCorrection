@@ -271,12 +271,12 @@ class DataReader():
 
 class DataCooker():
     def __init__(self, counts, size_factors=None,
-                 inject_outliers=False, inject_on_pred=True,
+                 denoisingAE=False, optimization=False,
                  only_prediction=False, inj_method="OutInjectionFC",
-                 pred_counts=None, pred_sf=None, seed = None):
+                 seed = None):
         self.counts = counts
-        self.inject_outliers = inject_outliers
-        self.inject_outliers_on_pred = inject_on_pred
+        self.denoisingAE = denoisingAE
+        self.optimization = optimization
         self.only_prediction = only_prediction
         self.inj_method = inj_method
         self.seed = seed
@@ -284,15 +284,7 @@ class DataCooker():
             self.sf = size_factors
         else:
             self.sf = np.ones_like(counts).astype(float)
-        if pred_counts is not None:
-            self.pred_counts = pred_counts
-            if pred_sf is not None:
-                self.pred_sf = pred_sf
-            else:
-                self.pred_sf = np.ones_like(counts).astype(float)
-        else:
-            self.pred_counts = deepcopy(counts)
-            self.pred_sf = self.sf
+
 
     def inject(self, data):
         print("Using "+self.inj_method+" method!")
@@ -302,7 +294,7 @@ class DataCooker():
             raise ValueError("Please specify one of injection methods: 'OutInjectionFC', ...")
         return injected_outliers
 
-    def get_count_data(self, counts, sf):
+    def get_count_data(self, counts, sf=None):
         count_data = TrainTestPreparation(data=counts,sf=sf,
                                           no_rescaling=False,
                                           no_splitting=True)
@@ -314,41 +306,35 @@ class DataCooker():
 
     def data(self, inj_method="OutInjectionFC"):
         self.inj_method=inj_method
-        count_data = self.get_count_data(self.counts,self.sf)
-        pred_count_data = deepcopy(count_data)
-        if self.inject_outliers_on_pred:
-            if not np.array_equal(self.counts,self.pred_counts):
-                pred_count_data = self.get_count_data(self.pred_counts,self.pred_sf)
-            pred_noisy = self.prepare_noisy(pred_count_data)
-            x_test = {'inp': pred_noisy.outlier_data.data_with_outliers,
-                      'sf': pred_count_data.processed_data.size_factor}
-            y_true_idx_test = np.stack([self.pred_counts.astype(int), pred_noisy.outlier_data.index])
-            data = pred_noisy.outlier_data.data_with_outliers
-            count_data = self.get_count_data(data, self.sf)
-        else:
-            print("Preparing data!")
-            x_test = {'inp': count_data.processed_data.data,
-                      'sf': count_data.processed_data.size_factor}
-            y_true_idx_test = None
+        inp_data = self.get_count_data(self.counts,self.sf)
+        proc_data = deepcopy(inp_data)
         if not self.only_prediction:
-            if self.inject_outliers:
-                count_noisy = self.prepare_noisy(count_data)
-                x_noisy_train = {'inp': count_noisy.outlier_data.data_with_outliers,
-                                 'sf': count_data.processed_data.size_factor}
-                x_train = count_data.processed_data.data
-                x_noisy_valid = {'inp': count_noisy.outlier_data.data_with_outliers,
-                                 'sf': count_data.processed_data.size_factor}
-                x_valid = count_data.processed_data.data
+            if self.optimization:
+                print("Prepare for optimization!")
+                data_in = self.prepare_noisy(proc_data)
+                data_out = deepcopy(data_in)
+                data_out_noise_idx = data_out.outlier_data.index
+                data_out = self.get_count_data(data_out)
             else:
-                x_noisy_train = {'inp': count_data.processed_data.data,
-                                 'sf': count_data.processed_data.size_factor}
-                x_train = count_data.processed_data.data
-                x_noisy_valid = {'inp': count_data.processed_data.data,
-                                 'sf': count_data.processed_data.size_factor}
-                x_valid = count_data.processed_data.data
-            cooked_data = (x_noisy_train, x_train),(x_noisy_valid, x_valid), (x_test, y_true_idx_test)
+                print("Prepare data!")
+                data_in = proc_data
+                data_out = deepcopy(data_in)
+            if self.denoisingAE:
+                data_in = self.prepare_noisy(data_in)
+
+            x_in = {'inp': data_in.processed_data.data,
+                    'sf': data_in.processed_data.size_factor}
+            x_out = data_out.processed_data.data
+
+            x_pred = {'inp': data_out.processed_data.data,
+                      'sf': data_out.processed_data.size_factor}
+            y_true_and_idx = np.stack([self.counts.astype(int), data_out_noise_idx])
+
+            cooked_data = (x_in, x_out),(x_in, x_out), (x_pred, y_true_and_idx)
         else:
-            cooked_data = (None, None),(None, None), (x_test, None)
+            x_pred = {'inp': inp_data.processed_data.data,
+                      'sf': inp_data.processed_data.size_factor}
+            cooked_data = (None, None), (None, None), (x_pred, None)
         return cooked_data
 
 
