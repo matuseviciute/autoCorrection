@@ -188,6 +188,7 @@ class TrainTestPreparation():
     def get_size_factor(self):
         loggeom = np.mean(np.log1p(self.data), 0)
         sf = np.exp(np.median(np.log1p(self.data) - loggeom, 1))
+        sf = np.repeat(sf.reshape(sf.shape[0], 1), self.data.shape[1], axis=1)
         return sf
 
     def set_sf(self):
