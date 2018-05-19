@@ -8,7 +8,7 @@ class TestEndToEnd(unittest.TestCase):
     def test_end_to_end(self):
         counts = np.random.negative_binomial(n=20, p=0.2, size=(10, 8))
         sf = np.ones((10, 8))
-        corrector = autoCorrection.correctors.AECorrector()
+        corrector = autoCorrection.correctors.AECorrector(encoding_dim=5)
         correction = corrector.correct(counts=counts, size_factors=sf)
         #self.assertEqual(counts.shape, correction.shape)
         ev = autoCorrection.data_utils.Evaluation(counts, correction)
