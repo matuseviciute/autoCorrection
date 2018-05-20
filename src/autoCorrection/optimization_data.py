@@ -23,6 +23,6 @@ class OptimizationData():
         else:
             counts = dr.read_gtex_skin()
         cook = DataCooker(counts, optimization=True,
-                          denoisingAE=False, seed=1234)
+                          denoisingAE=False, seed=None)
         data = cook.data("OutInjectionFC")
         return data
