@@ -20,8 +20,8 @@ class ConstantDispersionLayer(Layer):
         self.theta_exp = K.minimum(K.exp(self.theta), 1e12)
         super().build(input_shape)
 
-    def call(self, x):
-        return tf.identity(x)
+    def call(self, inputs, **kwargs):
+        return tf.identity(inputs)
 
     def compute_output_shape(self, input_shape):
         return input_shape

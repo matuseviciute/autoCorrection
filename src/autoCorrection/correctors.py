@@ -20,16 +20,17 @@ class DummyCorrector(Corrector):
         pass
 
     def correct(self, counts, size_factors, **kwargs):
-        return np.ones_like(self.counts)
+        return np.ones_like(counts)
 
 
 class AECorrector(Corrector):
-    def __init__(self, model_name=None, model_directory=None, verbose=True,
+    def __init__(self, model_name=None, model_directory=None, verbose=True, optimize=True,
                  param_path=OPT_PARAM_PATH, param_exp_name=None, denoisingAE=False,
                  save_model=True, epochs=DEFAULT_EPOCHS, encoding_dim=DEFAULT_ENCODING_DIM,
                  lr=DEFAULT_LEARNING_RATE, batch_size=DEFAULT_BATCH_SIZE,
                  seed=None):
         self.denoisingAE = denoisingAE
+        self.optimize=optimize
         self.save_model = save_model
         self.seed = seed
         if model_name is None:
@@ -71,8 +72,8 @@ class AECorrector(Corrector):
         if (not (os.path.isfile(model_file) or os.path.isfile(weights_file))) and only_predict:
             raise ValueError("There is no model "+str(model_file)+" or no weigthts "+str(weights_file)+
                   "' saved. Only predict is not possible!")
-        self.loader = DataCooker(counts, size_factors,
-                                 denoisingAE=self.denoisingAE,
+        self.loader = DataCooker(counts, size_factors, denoisingAE=self.denoisingAE,
+                                 optimization=self.optimize,
                                  only_prediction=only_predict, seed=self.seed)
         self.data = self.loader.data()
         if not only_predict:

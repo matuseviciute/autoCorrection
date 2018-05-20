@@ -19,6 +19,7 @@ class OutlierLoss():
         sess.run(tf.global_variables_initializer())
         with sess.as_default():
             loss_res=nb.loss(counts,pred_mean+1e-10).eval()
+        sess.close()
         return loss_res
 
 

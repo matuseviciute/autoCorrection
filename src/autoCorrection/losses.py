@@ -5,7 +5,7 @@ import numpy as np
 #
 # Constant values
 # 
-THETA = [0.0]
+THETA = [25.0]
 
 def _nan2inf(x):
     return tf.where(tf.is_nan(x), tf.zeros_like(x)+np.inf, x)
